@@ -7,7 +7,6 @@ namespace Controllers
 {
     public class BoidsController : MonoBehaviour
     {
-        public Transform target;
         public Boid boidsPrefab;
         public BoxCollider2D border;
         public BoidSettings boidSettings;
@@ -16,7 +15,6 @@ namespace Controllers
 
         private void Awake()
         {
-            boidSettings.target = target;
             _boidsService ??= new BoidsService(boidSettings);
         }
 

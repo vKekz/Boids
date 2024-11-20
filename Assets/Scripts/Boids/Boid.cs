@@ -7,9 +7,15 @@ namespace Boids
     public class Boid : MonoBehaviour
     {
         public GameObject boidPrefab;
-        
+
         [HideInInspector]
         public Vector3 velocity;
+
+        [HideInInspector]
+        public Vector3 previousAlignment;
+
+        [HideInInspector]
+        public Vector3 previousSeparation;
 
         private BoidSettings _boidSettings;
         
@@ -24,7 +30,10 @@ namespace Boids
         public void UpdateBoid(List<Boid> nearbyBoids, Bounds bounds)
         {
             var acceleration = CalculateAcceleration(nearbyBoids);
-            
+
+            // Apply obstacle avoidance
+            // acceleration += SteerTowards(CalculateObstacleAvoidance());
+
             // Apply acceleration
             velocity += acceleration * Time.deltaTime;
 
@@ -44,16 +53,7 @@ namespace Boids
         private Vector3 CalculateAcceleration(List<Boid> nearbyBoids)
         {
             var acceleration = Vector3.zero;
-            
-            // Target following
-            if (_boidSettings.target)
-            {
-                var offsetToTarget = _boidSettings.target.transform.position - transform.position;
-                acceleration = SteerTowards(offsetToTarget) * _boidSettings.targetWeight;
-            }
 
-            // acceleration += CalculateObstacleAvoidance();
-            
             var amountOfNearbyBoids = nearbyBoids.Count;
             if (amountOfNearbyBoids <= 0)
             {
@@ -81,13 +81,15 @@ namespace Boids
 
             // Rule of separation
             var separationForce = SteerTowards(averageSeparation) * _boidSettings.separationWeight;
-                
+            previousSeparation = separationForce;
+            
             // Rule of alignment
             var alignmentForce = SteerTowards(averageAlignment) * _boidSettings.alignmentWeight;
+            previousAlignment = alignmentForce;
                 
             // Rule of cohesion
             var cohesionForce = SteerTowards(averageCohesion - transform.position) * _boidSettings.cohesionWeight;
-
+            
             acceleration += separationForce;
             acceleration += alignmentForce;
             acceleration += cohesionForce;
@@ -97,16 +99,16 @@ namespace Boids
 
         private Vector3 CalculateObstacleAvoidance()
         {
-            var acceleration = Vector3.zero;
-            var colliders = Physics.OverlapSphere(transform.position, 3f);
-
-            foreach (var hitCollider in colliders)
+            if (!Physics.Raycast(transform.position, transform.position + velocity, out var raycastHit, 3f, 1<< _boidSettings.obstacleMask.value))
             {
-                var positionDifference = hitCollider.transform.position - transform.position;
-                acceleration -= positionDifference.normalized / positionDifference.sqrMagnitude;
+                return Vector3.zero;
             }
+            
+            Debug.Log(raycastHit);
 
-            return acceleration.normalized;
+            var distanceToBorder = Vector3.Distance(transform.position, raycastHit.transform.position);
+            var positionDifference = transform.position - raycastHit.transform.position;
+            return positionDifference / distanceToBorder;
         }
 
         private void HandleBorderBounds(Bounds bounds)
@@ -140,6 +142,21 @@ namespace Boids
         {
             var vector = target.normalized * _boidSettings.maxSpeed - velocity;
             return Vector3.ClampMagnitude(vector, _boidSettings.maxSteeringForce);
+        }
+
+        private void OnDrawGizmos()
+        {
+            if (_boidSettings.renderSeparation)
+            {
+                Gizmos.color = Color.red;
+                Gizmos.DrawLine(transform.position, transform.position + previousSeparation);
+            }
+
+            if (_boidSettings.renderAlignment)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawLine(transform.position, transform.position + previousAlignment);   
+            }
         }
     }
 }
