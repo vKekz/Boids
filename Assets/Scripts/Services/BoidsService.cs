@@ -10,27 +10,27 @@ namespace Services
     /// <inheritdoc />
     public class BoidsService : IBoidsService
     {
-        public const string ParentName = "BoidsParent";
-
-        public BoidSettings BoidSettings;
-        public List<Boid> Boids;
+        private const string ParentName = "BoidsParent";
+        private readonly BoidSettings _boidSettings;
         
         private Random _random;
 
         public BoidsService(BoidSettings boidSettings)
         {
-            BoidSettings = boidSettings;
             Boids = new List<Boid>();
-            
+
+            _boidSettings = boidSettings;   
             _random = new Random(1337);
         }
-        
+
+        public List<Boid> Boids { get; }
+
         /// <inheritdoc />
         public void GenerateBoids(Boid boidsPrefab, Bounds bounds)
         {
             var parent = new GameObject(ParentName).transform;
             
-            for (var i = 0; i < BoidSettings.amountOfBoids; i++)
+            for (var i = 0; i < _boidSettings.amountOfBoids; i++)
             {
                 var posX = _random.NextFloat(bounds.min.x, bounds.max.x);
                 var posY = _random.NextFloat(bounds.min.y, bounds.max.y);
@@ -42,7 +42,7 @@ namespace Services
                     _random.NextInt(0, 360));
 
                 var boidObject = Object.Instantiate(boidsPrefab, position, rotation);
-                boidObject.Initialize(BoidSettings);
+                boidObject.Initialize(_boidSettings);
                 boidObject.transform.SetParent(parent);
 
                 Boids.Add(boidObject);
@@ -57,7 +57,7 @@ namespace Services
                 var nearbyBoids = Boids
                     .Where(b =>
                             b != boid &&
-                            Vector3.Distance(b.transform.position, boid.transform.position) < BoidSettings.perceptionRadius)
+                            Vector3.Distance(b.transform.position, boid.transform.position) < _boidSettings.perceptionRadius)
                     .Select(b => b)
                     .ToList();
 

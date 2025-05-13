@@ -63,7 +63,7 @@ namespace Boids
             var averageAlignment = Vector3.zero;
             var averageCohesion = Vector3.zero;
             var averageSeparation = Vector3.zero;
-                
+
             foreach (var nearbyBoid in nearbyBoids)
             {
                 var distanceToNearbyBoid = Vector3.Distance(transform.position, nearbyBoid.transform.position);
@@ -82,14 +82,14 @@ namespace Boids
             // Rule of separation
             var separationForce = SteerTowards(averageSeparation) * _boidSettings.separationWeight;
             previousSeparation = separationForce;
-            
+
             // Rule of alignment
             var alignmentForce = SteerTowards(averageAlignment) * _boidSettings.alignmentWeight;
             previousAlignment = alignmentForce;
-                
+
             // Rule of cohesion
             var cohesionForce = SteerTowards(averageCohesion - transform.position) * _boidSettings.cohesionWeight;
-            
+
             acceleration += separationForce;
             acceleration += alignmentForce;
             acceleration += cohesionForce;
@@ -142,21 +142,6 @@ namespace Boids
         {
             var vector = target.normalized * _boidSettings.maxSpeed - velocity;
             return Vector3.ClampMagnitude(vector, _boidSettings.maxSteeringForce);
-        }
-
-        private void OnDrawGizmos()
-        {
-            if (_boidSettings.renderSeparation)
-            {
-                Gizmos.color = Color.red;
-                Gizmos.DrawLine(transform.position, transform.position + previousSeparation);
-            }
-
-            if (_boidSettings.renderAlignment)
-            {
-                Gizmos.color = Color.green;
-                Gizmos.DrawLine(transform.position, transform.position + previousAlignment);   
-            }
         }
     }
 }

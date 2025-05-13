@@ -1,4 +1,5 @@
-﻿using Boids;
+﻿using System.Collections.Generic;
+using Boids;
 using UnityEngine;
 
 namespace Services
@@ -8,6 +9,8 @@ namespace Services
     /// </summary>
     public interface IBoidsService
     {
+        public List<Boid> Boids { get; }
+
         /// <summary>
         /// Generates a given amount of Boids.
         /// </summary>
